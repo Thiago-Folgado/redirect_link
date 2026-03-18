@@ -233,17 +233,72 @@ app.post("/admin/delete", (req, res) => {
 });
 
 // ============================================
-// REDIRECT PÚBLICO
+// REDIRECT PÚBLICO (compatível com app mobile)
 // ============================================
 app.get("/:slug", (req, res) => {
   const redirects = loadRedirects();
   const destination = redirects[req.params.slug];
 
-  if (destination) {
-    return res.redirect(302, destination);
+  if (!destination) {
+    return res.status(404).send("Link não encontrado.");
   }
 
-  res.status(404).send("Link não encontrado.");
+  // Serve uma página HTML que força o redirect no app
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="0;url=${destination}">
+  <meta property="og:url" content="${destination}">
+  <title>Redirecionando...</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #075E54;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: #25D366;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 { font-size: 1.1rem; margin-bottom: 8px; }
+    p { font-size: 0.85rem; opacity: 0.7; margin-bottom: 20px; }
+    a {
+      display: inline-block;
+      background: #25D366;
+      color: white;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 25px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <div class="spinner"></div>
+    <h1>Entrando no grupo...</h1>
+    <p>Se não redirecionar, toque no botão abaixo.</p>
+    <a href="${destination}">Entrar no Grupo</a>
+  </div>
+  <script>
+    window.location.replace("${destination}");
+  </script>
+</body>
+</html>`);
 });
 
 app.get("/", (req, res) => {
